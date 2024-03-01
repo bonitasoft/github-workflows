@@ -43,12 +43,18 @@ jobs:
           path: './.splitsh'
           key: '${{ runner.os }}-splitsh-d-101'
       - uses: bonitasoft/git-setup-action@v1
+        id: git-setup
         with:
           keeper-secret-config: ${{ secrets.KSM_CONFIG }}
       - name: Create configuration file
         run: |
          sudo apt install -y jo
-         jo sub-splits=$(jo -a $(jo name=community directory=${{ inputs.prefix }} target=https://${{ secrets.BONITA_CI_PAT }}@github.com/${{ inputs.target }}.git)) > ./config.subsplit-publish.json
+         jo sub-splits=$(jo -a $(jo name=community directory=${{ inputs.prefix }} target=git@github.com/${{ inputs.target }}.git)) > ./config.subsplit-publish.json
+      - uses: frankdejonge/use-github-token@1.0.1
+        with:
+          authentication: '${{ steps.git-setup.outputs.name }}:${{ secrets.BONITA_CI_PAT }}'
+          user_name: ${{ steps.git-setup.outputs.name }}
+          user_email: ${{ steps.git-setup.outputs.email }}
       - uses: frankdejonge/use-subsplit-publish@1.1.0
         with:
           source-branch: ${{ inputs.reference }}
