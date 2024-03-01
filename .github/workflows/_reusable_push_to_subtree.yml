@@ -3,12 +3,12 @@ name: Push to subtree
 on:
   workflow_call:
     inputs:
-      remote:
+      target:
         type: string
         required: true
         description: |
-          The remote url of the subtree repository.
-          eg: https://github.com/bonitasoft/bonita-studio.git 
+          The target repository name whew to push the subtree repository.
+          eg: bonitasoft/bonita-studio 
       prefix: 
         type: string
         required: false
@@ -34,12 +34,29 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Split community subtree
-        uses: claudiodekker/splitsh-action@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.BONITA_CI_PAT }}
+      - name: Cache splitsh-lite
+        id: splitsh-cache
+        uses: actions/cache@v2
         with:
-          prefix: ${{ inputs.prefix }}
-          remote: ${{ inputs.remote }}
-          reference: ${{ inputs.reference }}
-          as_tag: false
+          path: './.splitsh'
+          key: '${{ runner.os }}-splitsh-d-101'
+      - uses: bonitasoft/git-setup-action@v1
+        with:
+          keeper-secret-config: ${{ secrets.BONITA_CI_PAT }}
+      - name: Create configuration file
+        run: |
+         jo sub-splits=$(jo -a $(jo name=community directory=${{ inputs.prefix }} target=git@github.com/${{ inputs.target }}.git)) > ./config.subsplit-publish.json
+      - uses: frankdejonge/use-subsplit-publish@1.1.0
+        with:
+          source-branch: ${{ inputs.reference }}
+          config-path: './config.subsplit-publish.json'
+          splitsh-path: './.splitsh/splitsh-lite'
+      # - name: Split community subtree
+      #   uses: claudiodekker/splitsh-action@v1.0.0
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.BONITA_CI_PAT }}
+      #   with:
+      #     prefix: ${{ inputs.prefix }}
+      #     remote: ${{ inputs.remote }}
+      #     reference: ${{ inputs.reference }}
+      #     as_tag: false
