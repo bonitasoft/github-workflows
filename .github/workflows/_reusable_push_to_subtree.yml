@@ -49,7 +49,6 @@ jobs:
         run: |
          sudo apt install -y jo
          jo sub-splits=$(jo -a $(jo name=community directory=${{ inputs.prefix }} target=https://${{ secrets.BONITA_CI_PAT }}:github.com/${{ inputs.target }}.git)) > ./config.subsplit-publish.json
-         git 
       - uses: frankdejonge/use-subsplit-publish@1.1.0
         with:
           source-branch: ${{ inputs.reference }}
