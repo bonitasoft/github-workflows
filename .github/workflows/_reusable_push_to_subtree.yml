@@ -47,6 +47,7 @@ jobs:
           keeper-secret-config: ${{ secrets.KSM_CONFIG }}
       - name: Create configuration file
         run: |
+         sudo apt install -y jo
          jo sub-splits=$(jo -a $(jo name=community directory=${{ inputs.prefix }} target=git@github.com/${{ inputs.target }}.git)) > ./config.subsplit-publish.json
       - uses: frankdejonge/use-subsplit-publish@1.1.0
         with:
