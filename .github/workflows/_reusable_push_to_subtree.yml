@@ -36,6 +36,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Cache splitsh-lite
         id: splitsh-cache
         uses: actions/cache@v4
@@ -49,7 +50,7 @@ jobs:
       - name: Create configuration file
         run: |
          sudo apt install -y jo
-         jo sub-splits=$(jo -a $(jo name=community directory=${{ inputs.prefix }} target=git@github.com:${{ inputs.target }}.git)) > ./config.subsplit-publish.json
+         jo sub-splits=$(jo -a $(jo name=community directory=${{ inputs.prefix }} target=https://github.com/${{ inputs.target }}.git)) > ./config.subsplit-publish.json
       - uses: frankdejonge/use-github-token@1.0.1
         with:
           authentication: '${{ steps.git-setup.outputs.name }}:${{ secrets.BONITA_CI_PAT }}'
