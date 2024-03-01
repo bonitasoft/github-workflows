@@ -1,0 +1,45 @@
+name: Push to subtree
+
+on:
+  workflow_call:
+    inputs:
+      remote:
+        type: string
+        required: true
+        description: |
+          The remote url of the subtree repository.
+          eg: https://github.com/bonitasoft/bonita-studio.git 
+      prefix: 
+        type: string
+        required: false
+        default: community
+        description: |
+          The prefix used for the community subtree. 
+          Default is 'community'
+      reference: 
+        type: string
+        required: false
+        default: dev
+        description: |
+          The reference to push to the git subtree. 
+          Default is 'dev'. Can't be a tag.
+    secrets:
+      BONITA_CI_PAT:
+        required: true
+
+jobs:
+  push-to-subtree:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Split community subtree
+        uses: claudiodekker/splitsh-action@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.BONITA_CI_PAT }}
+        with:
+          prefix: ${{ inputs.prefix }}
+          remote: ${{ inputs.remote }}
+          reference: ${{ inputs.reference }}
+          as_tag: false
