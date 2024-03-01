@@ -1,9 +1,9 @@
-# github-workflows
+# Github workflows
 Home of the shared reusable workflows used in Bonitasoft organization.
 
 ## Reusable workflows
 
-* Create a merge Pull Request in upstream branch[https://github.com/bonitasoft/github-workflows/wiki/Create-Merge-Pull-Request]
+* [Create a merge Pull Request in upstream branch](https://github.com/bonitasoft/github-workflows/wiki/Create-Merge-Pull-Request)
 
 ## Disclaimer
 
