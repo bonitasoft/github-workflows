@@ -24,6 +24,8 @@ on:
           The reference to push to the git subtree. 
           Default is 'dev'. Can't be a tag.
     secrets:
+      KSM_CONFIG:
+        required: true
       BONITA_CI_PAT:
         required: true
 
@@ -36,13 +38,13 @@ jobs:
           fetch-depth: 0
       - name: Cache splitsh-lite
         id: splitsh-cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: './.splitsh'
           key: '${{ runner.os }}-splitsh-d-101'
       - uses: bonitasoft/git-setup-action@v1
         with:
-          keeper-secret-config: ${{ secrets.BONITA_CI_PAT }}
+          keeper-secret-config: ${{ secrets.KSM_CONFIG }}
       - name: Create configuration file
         run: |
          jo sub-splits=$(jo -a $(jo name=community directory=${{ inputs.prefix }} target=git@github.com/${{ inputs.target }}.git)) > ./config.subsplit-publish.json
