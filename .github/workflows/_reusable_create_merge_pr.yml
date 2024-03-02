@@ -18,6 +18,10 @@ jobs:
     permissions: 
       pull-requests: write
       contents: write
+      actions: read
+      checks: read
+      repository-projects: read
+      statuses: read
     steps:
       - name: Determine upstream branch
         id: upstream-branch
@@ -54,5 +58,5 @@ jobs:
         run: |
           IFS="," read -a myarray <<< ${{ inputs.labels }}
           for i in "${myarray[@]}"; do
-            gh pr edit ${{ steps.create-pr.outputs.pr-url || steps.existing-pr.outputs.pr-url }}  --add-label ${i}
+            gh pr edit ${{ steps.create-pr.outputs.pr-url || steps.existing-pr.outputs.pr-url }} --add-label ${i}
           done
