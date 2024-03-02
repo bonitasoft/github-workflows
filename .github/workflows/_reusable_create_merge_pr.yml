@@ -26,12 +26,11 @@ jobs:
       - id: existing-pr
         name: Check opened Pull Request
         run: >
-          pr_url=$(gh pr list
+          echo "pr-url=$(gh pr list
           --base ${{ steps.upstream-branch.outputs.ref }}
           --head ${{ github.ref_name }}
-          --json url 
-          --jq '[.[]|.url][0]')
-          && echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
+          --json url
+          --jq '[.[]|.url][0]')" >> "$GITHUB_OUTPUT"
       - id: create-pr
         if: ${{ steps.existing-pr.outputs.pr_url == '' }}
         name: Create Pull Request
