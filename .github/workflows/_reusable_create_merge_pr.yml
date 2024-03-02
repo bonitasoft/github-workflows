@@ -10,6 +10,9 @@ on:
           Adds automerge label by default.
         default: automerge
         required: false
+    secrets:
+     BONITA_CI_PAT:
+      required: true
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
@@ -47,6 +50,9 @@ jobs:
           && echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
       - id: enable-auto-merge
         name: Enable auto-merge
+        env:
+          # Use bonita-ci user access token to force triggering of events when merging
+          GH_TOKEN: ${{ secrets.BONITA_CI_PAT }}
         run: >
           gh pr merge 
           --auto
