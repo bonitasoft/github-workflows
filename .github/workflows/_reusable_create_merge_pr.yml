@@ -32,7 +32,7 @@ jobs:
           --json url
           --jq '[.[]|.url][0]')" >> "$GITHUB_OUTPUT"
       - id: create-pr
-        if: ${{ steps.existing-pr.outputs.pr_url == '' }}
+        if: ${{ steps.existing-pr.outputs.pr-url == '' }}
         name: Create Pull Request
         run: >
           pr_url=$(gh pr create
@@ -47,12 +47,12 @@ jobs:
           gh pr merge 
           --auto
           --merge
-          ${{ steps.create-pr.outputs.pr-url || steps.existing-pr.outputs.pr_url }}
+          ${{ steps.create-pr.outputs.pr-url || steps.existing-pr.outputs.pr-url }}
       - id: add-pr-labels
         name: Add PR Labels
         if: ${{ inputs.labels != '' }}
         run: |
           IFS="," read -a myarray <<< ${{ inputs.labels }}
           for i in "${myarray[@]}"; do
-            gh pr edit ${{ steps.create-pr.outputs.pr-url || steps.existing-pr.outputs.pr_url }}  --add-label ${i}
+            gh pr edit ${{ steps.create-pr.outputs.pr-url || steps.existing-pr.outputs.pr-url }}  --add-label ${i}
           done
