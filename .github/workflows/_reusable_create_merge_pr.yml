@@ -10,23 +10,31 @@ on:
           Adds automerge label by default.
         default: automerge
         required: false
-    secrets:
-      BONITA_CI_PAT:
-        required: true
-
 env:
-  GH_TOKEN: ${{ secrets.BONITA_CI_PAT }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   create-pr:
     runs-on: ubuntu-22.04
+    permissions: 
+      pull-requests: write
+      contents: write
     steps:
       - name: Determine upstream branch
         id: upstream-branch
         run: echo "ref=${{ fromJson(vars.SUPPORTED_BRANCHES).upstream-branch[github.ref_name] }}" >> $GITHUB_OUTPUT
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.BONITA_CI_PAT }}
+      - id: existing-pr
+        name: Check opened Pull Request
+        run: >
+          pr_url=$(gh pr list
+          --base ${{ steps.upstream-branch.outputs.ref }}
+          --head ${{ github.ref_name }}
+          --json url 
+          --jq '[.[]|.url][0]')
+          && echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
       - id: create-pr
+        if: ${{ steps.existing-pr.outputs.pr_url == '' }}
+        name: Create Pull Request
         run: >
           pr_url=$(gh pr create
           --base ${{ steps.upstream-branch.outputs.ref }}
@@ -35,15 +43,17 @@ jobs:
           --body "Pull request opened automatically. Use Merge Pull Request action (DO NOT SQUASH).")
           && echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
       - id: enable-auto-merge
+        name: Enable auto-merge
         run: >
           gh pr merge 
           --auto
           --merge
-          ${{ steps.create-pr.outputs.pr-url }}
+          ${{ steps.create-pr.outputs.pr-url || steps.existing-pr.outputs.pr_url }}
       - id: add-pr-labels
+        name: Add PR Labels
         if: ${{ inputs.labels != '' }}
         run: |
           IFS="," read -a myarray <<< ${{ inputs.labels }}
           for i in "${myarray[@]}"; do
-            gh pr edit ${{ steps.create-pr.outputs.pr-url }}  --add-label ${i}
+            gh pr edit ${{ steps.create-pr.outputs.pr-url || steps.existing-pr.outputs.pr_url }}  --add-label ${i}
           done
