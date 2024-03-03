@@ -30,6 +30,13 @@ jobs:
         id: upstream-branch
         run: echo "ref=${{ fromJson(vars.SUPPORTED_BRANCHES).upstream-branch[github.ref_name] }}" >> $GITHUB_OUTPUT
       - uses: actions/checkout@v4
+      - name: Find assignee GitHub login
+        id: assignee
+        run: |
+          # Search author email of the latest non merge commit in current branch history
+          author_email=echo "$(git log -1 --no-merges --pretty=format:'%ae')"
+          # Store associated Github handle find by the gh api. Might be empty when user email is not public.
+          echo "login=$(gh search commits -L 1 --author-email=$author_email --json author -q '.[].author.login')" >> "$GITHUB_OUTPUT"
       - id: existing-pr
         name: Check opened Pull Request
         run: >
@@ -44,7 +51,7 @@ jobs:
         run: >
           pr_url=$(gh pr create
           --base ${{ steps.upstream-branch.outputs.ref }}
-          --assignee ${{ github.actor }}
+          --assignee ${{ steps.assignee.outputs.login || github.actor }}
           --title "[merge] ${{ github.ref_name}} into ${{ steps.upstream-branch.outputs.ref }}"
           --body "Pull request opened automatically. Use Merge Pull Request action (DO NOT SQUASH).")
           && echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
