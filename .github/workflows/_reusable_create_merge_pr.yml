@@ -30,12 +30,13 @@ jobs:
         id: upstream-branch
         run: echo "ref=${{ fromJson(vars.SUPPORTED_BRANCHES).upstream-branch[github.ref_name] }}" >> $GITHUB_OUTPUT
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required to retrieve the last non merge commit author 
       - name: Find assignee GitHub login
         id: assignee
         run: |
           # Search author email of the latest non merge commit in current branch history
-          echo "$(git log --no-merges --perl-regexp --author='^((?!bonita-ci).*)$')"
-          author_email=$(git log -1 --no-merges --perl-regexp --author='^((?!bonita-ci).*)$' --pretty=format:'%ae')
+          author_email=$(git log -1 --no-merges --pretty=format:'%ae')
           echo "email=$author_email"
           # Store associated Github handle find by the gh api. Might be empty when user email is not public.
           login=$(gh search commits -L 1 --author-email=$author_email --json author -q '.[].author.login')
