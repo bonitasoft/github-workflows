@@ -34,8 +34,8 @@ jobs:
         id: assignee
         run: |
           # Search author email of the latest non merge commit in current branch history
-          echo "$(git log --no-merges)"
-          author_email=$(git log -1 --no-merges --pretty=format:'%ae')
+          echo "$(git log --no-merges --perl-regexp --author='^((?!bonita-ci).*)$')"
+          author_email=$(git log -1 --no-merges --perl-regexp --author='^((?!bonita-ci).*)$' --pretty=format:'%ae')
           echo "email=$author_email"
           # Store associated Github handle find by the gh api. Might be empty when user email is not public.
           login=$(gh search commits -L 1 --author-email=$author_email --json author -q '.[].author.login')
