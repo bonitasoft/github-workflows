@@ -50,6 +50,9 @@ jobs:
       - id: create-pr
         if: ${{ steps.existing-pr.outputs.pr-url == '' }}
         name: Create Pull Request
+        env:
+          # Use bonita-ci user access token to force triggering of events
+          GH_TOKEN: ${{ secrets.BONITA_CI_PAT }}
         run: >
           pr_url=$(gh pr create
           --base ${{ steps.upstream-branch.outputs.ref }}
