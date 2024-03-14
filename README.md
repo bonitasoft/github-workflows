@@ -3,7 +3,7 @@ Home of the shared reusable workflows used in Bonitasoft organization.
 
 ## Reusable workflows
 
-* [Create a merge Pull Request in upstream branch](https://github.com/bonitasoft/github-workflows/wiki/Create-Merge-Pull-Request)
+* [Merge upstream branch](https://github.com/bonitasoft/github-workflows/wiki/Merge-upstream-branch)
 * [Push to subtree](https://github.com/bonitasoft/github-workflows/wiki/Push-to-subtree)
 
 ## Disclaimer
