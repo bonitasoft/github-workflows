@@ -85,5 +85,5 @@ jobs:
           --base ${{ steps.upstream-branch.outputs.ref }}
           --assignee ${{ steps.assignee.outputs.login || github.actor }}
           --title "[merge] ${{ github.ref_name}} into ${{ steps.upstream-branch.outputs.ref }}"
-          --body "Merge Pull request opened automatically. Use Merge Pull Request action (DO NOT SQUASH).")
+          --body "Merge Pull request opened automatically. Use Merge Pull Request action (DO NOT SQUASH). DO NOT commit conflict resolution update to the base branch (default option in Github UI).")
           && echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
