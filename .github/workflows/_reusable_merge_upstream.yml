@@ -83,7 +83,7 @@ jobs:
         run: >
           pr_url=$(gh pr create
           --base ${{ steps.upstream-branch.outputs.ref }}
-          --assignee ${{ steps.assignee.outputs.login || (github.actor != 'github-actions[bot]' && github.actor || 'bonita-ci')}}
+          --assignee ${{ (steps.assignee.outputs.login != 'github-actions[bot]' && steps.assignee.outputs.login) || (github.actor != 'github-actions[bot]' && github.actor || 'bonita-ci')}}
           --title "[merge] ${{ github.ref_name}} into ${{ steps.upstream-branch.outputs.ref }}"
           --body "Merge Pull request opened automatically. Use `Merge Pull Request` action (DO NOT SQUASH). DO NOT commit conflict resolution update to the base branch (default option in Github UI).")
           && echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
