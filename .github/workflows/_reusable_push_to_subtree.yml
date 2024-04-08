@@ -3,6 +3,14 @@ name: Push to subtree
 on:
   workflow_call:
     inputs:
+      ref: 
+        type: string
+        default: ${{ github.ref }}
+        required: false
+      ref_name: 
+        type: string
+        default: ${{ github.ref_name }}
+        required: false
       remote:
         type: string
         required: true
@@ -26,6 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
       - name: Split community subtree
         uses: claudiodekker/splitsh-action@v1.0.0
@@ -34,5 +43,5 @@ jobs:
         with:
           prefix: ${{ inputs.prefix }}
           remote: ${{ inputs.remote }}
-          reference: ${{ github.ref_name }}
-          as_tag: ${{ startsWith(github.ref, 'refs/tags/') }}
+          reference: ${{ inputs.ref_name }}
+          as_tag: ${{ startsWith(inputs.ref, 'refs/tags/') }}
