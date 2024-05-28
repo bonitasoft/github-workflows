@@ -57,6 +57,11 @@ jobs:
           ref: ${{ github.ref }}
           fetch-depth: 0 # Required to retrieve the last non merge commit author
 
+      - name: Create merge branch
+        run: |
+          git checkout -B merge/${{ github.ref_name }}
+          git push --set-upstream origin merge/${{ github.ref_name }}
+
       - name: Find assignee GitHub login
         id: assignee
         run: |
@@ -70,7 +75,7 @@ jobs:
         run: >
           echo "pr-url=$(gh pr list
           --base ${{ steps.upstream-branch.outputs.ref }}
-          --head ${{ github.ref_name }}
+          --head merge/${{ github.ref_name }}
           --json url
           --jq '[.[]|.url][0]')" >> "$GITHUB_OUTPUT"
 
@@ -83,6 +88,7 @@ jobs:
         run: >
           pr_url=$(gh pr create
           --base ${{ steps.upstream-branch.outputs.ref }}
+          --head merge/${{ github.ref_name }}
           --assignee ${{ (steps.assignee.outputs.login != 'github-actions[bot]' && steps.assignee.outputs.login) || (github.actor != 'github-actions[bot]' && github.actor || 'bonita-ci')}}
           --title "[merge] ${{ github.ref_name}} into ${{ steps.upstream-branch.outputs.ref }}"
           --body "Merge Pull request opened automatically. Use `Merge Pull Request` action (DO NOT SQUASH). DO NOT commit conflict resolution update to the base branch (default option in Github UI).")
