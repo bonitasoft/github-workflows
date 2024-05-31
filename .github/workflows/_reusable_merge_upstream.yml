@@ -2,6 +2,10 @@ name: Merge Branch Upstream
 
 on:
   workflow_call:
+    inputs:
+      ignore-conflicts:
+        type: boolean
+        default: false
     secrets:
      KSM_CONFIG:
       required: true
@@ -30,9 +34,13 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.BONITA_CI_PAT }}
 
+      - name: Configure git merge.ours.driver
+        if:  ${{ inputs.ignore-conflicts }}
+        run: git config merge.ours.driver true
+
       - name: Merge upstream branch
         run: |
-           git merge origin/${{ github.ref_name }} -m "chore(merge): ${{ github.ref_name }} into ${{ steps.upstream-branch.outputs.ref }}"
+           git merge origin/${{ github.ref_name }} ${{ inputs.ignore-conflicts && '-X ours' || ''}}  -m "chore(merge): ${{ github.ref_name }} into ${{ steps.upstream-branch.outputs.ref }}"
            git push
 
   create-merge-pr-in-conflict:
