@@ -1,0 +1,78 @@
+name: Release Bonita connector
+
+on:
+  workflow_call:
+    inputs:
+      release-version:
+        type: string
+        description: 'The version to release.'
+        required: true
+      build-and-release-command-line: 
+        type: string
+        description: The command-line used to build and publish the release
+        required: false
+        default: ./mvnw --batch-mode deploy -Pdeploy
+      asset-path: 
+        type: string
+        description: The path of the folder containing the built asset to attach to the release
+        required: false
+        default: ./target
+      asset-name:
+        type: string
+        description: The name of the file containing the built asset to attach to the release
+        required: false
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: Keeper-Security/ksm-action@v1
+        with:
+          keeper-secret-config: ${{ secrets.KSM_CONFIG }}
+          secrets: |
+            ${{ vars.KEEPER_OSSRH_RECORD_ID }}/field/login > env:MAVEN_USERNAME
+            ${{ vars.KEEPER_OSSRH_RECORD_ID }}/field/password > env:MAVEN_PASSWORD
+            ${{ vars.KEEPER_GPG_ARTIFACT_SIGNING_RECORD_ID }}/field/login > env:GPG_KEYNAME
+            ${{ vars.KEEPER_GPG_ARTIFACT_SIGNING_RECORD_ID }}/custom_field/gpg-private-key > env:GPG_PRIVATE_KEY
+            ${{ vars.KEEPER_GPG_ARTIFACT_SIGNING_RECORD_ID }}/field/password > env:MAVEN_GPG_PASSPHRASE
+
+      - name: Import GPG key
+        id: import-gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ env.GPG_PRIVATE_KEY }}
+          passphrase: ${{ env.MAVEN_GPG_PASSPHRASE }}
+          fingerprint: ${{ env.GPG_KEYNAME }}
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'temurin'
+          cache: maven
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+
+      - run: ${{ inputs.build-and-release-command-line }} -Dgpg.keyname=${{ env.GPG_KEYNAME }}
+
+      - run: |
+          if [ "$ASSET_NAME" == "" ]; then
+            echo "name=${{ github.event.repository.name }}-${{ inputs.release-version }}-all.zip" >> $GITHUB_OUTPUT
+          else
+            echo "name=$(echo $ASSET_NAME)" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+        env:
+          ASSET_NAME: ${{ inputs.asset-name }}
+        id: evaluate_asset_name
+
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ inputs.release-version }}
+          name: Release ${{ inputs.release-version }}
+          generateReleaseNotes: true
+          artifacts: ${{ inputs.asset-path }}/${{ steps.evaluate_asset_name.outputs.name }}
