@@ -11,7 +11,7 @@ on:
         type: string
         description: The command-line used to build and publish the release
         required: false
-        default: ./mvnw --batch-mode deploy -Pdeploy
+        default: ./mvnw -ntp --batch-mode deploy -Pdeploy
       asset-path:
         type: string
         description: The path of the folder containing the built asset to attach to the release
