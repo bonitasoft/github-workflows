@@ -7,12 +7,12 @@ on:
         type: string
         description: 'The version to release.'
         required: true
-      build-and-release-command-line: 
+      build-and-release-command-line:
         type: string
         description: The command-line used to build and publish the release
         required: false
         default: ./mvnw --batch-mode deploy -Pdeploy
-      asset-path: 
+      asset-path:
         type: string
         description: The path of the folder containing the built asset to attach to the release
         required: false
@@ -30,34 +30,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: Keeper-Security/ksm-action@v1
-        with:
-          keeper-secret-config: ${{ secrets.KSM_CONFIG }}
-          secrets: |
-            ${{ vars.KEEPER_OSSRH_RECORD_ID }}/field/login > env:MAVEN_USERNAME
-            ${{ vars.KEEPER_OSSRH_RECORD_ID }}/field/password > env:MAVEN_PASSWORD
-            ${{ vars.KEEPER_GPG_ARTIFACT_SIGNING_RECORD_ID }}/field/login > env:GPG_KEYNAME
-            ${{ vars.KEEPER_GPG_ARTIFACT_SIGNING_RECORD_ID }}/custom_field/gpg-private-key > env:GPG_PRIVATE_KEY
-            ${{ vars.KEEPER_GPG_ARTIFACT_SIGNING_RECORD_ID }}/field/password > env:MAVEN_GPG_PASSPHRASE
-
-      - name: Import GPG key
-        id: import-gpg
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ env.GPG_PRIVATE_KEY }}
-          passphrase: ${{ env.MAVEN_GPG_PASSPHRASE }}
-          fingerprint: ${{ env.GPG_KEYNAME }}
-
       - uses: actions/setup-java@v5
         with:
           java-version: 17
-          distribution: 'temurin'
+          distribution: temurin
           cache: maven
-          server-id: ossrh
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
 
-      - run: ${{ inputs.build-and-release-command-line }} -Dgpg.keyname=${{ env.GPG_KEYNAME }}
+      - name: Configure Maven Settings
+        uses: bonitasoft/maven-settings-action@v1
+        with:
+          keeper-secret-config: ${{ secrets.KSM_CONFIG }}
+
+      - run: ${{ inputs.build-and-release-command-line }}
 
       - run: |
           if [ "$ASSET_NAME" == "" ]; then

@@ -1,3 +1,8 @@
 # Eclipse metadata files
 .project
 .settings/
+
+# IntelliJ IDEA metadata files
+.idea/
+*.iml
+*.iws
