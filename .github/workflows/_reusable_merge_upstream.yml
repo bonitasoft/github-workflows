@@ -24,7 +24,7 @@ env:
 
 jobs:
   merge-in-upstream-branch:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Setup git
         uses: bonitasoft/git-setup-action@v1
@@ -54,7 +54,7 @@ jobs:
   create-merge-pr-in-conflict:
     needs: merge-in-upstream-branch
     if: failure()
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       pull-requests: write
       contents: write
