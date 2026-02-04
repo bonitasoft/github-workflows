@@ -24,7 +24,7 @@ env:
 
 jobs:
   merge-in-upstream-branch:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Setup git
         uses: bonitasoft/git-setup-action@v1
@@ -54,7 +54,7 @@ jobs:
   create-merge-pr-in-conflict:
     needs: merge-in-upstream-branch
     if: failure()
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       pull-requests: write
       contents: write
@@ -67,6 +67,10 @@ jobs:
         id: upstream-branch
         run: echo "ref=${{ fromJson(vars.SUPPORTED_BRANCHES).upstream-branch[github.ref_name] }}" >> $GITHUB_OUTPUT
 
+      - name: Define merge branch
+        id: merge-branch
+        run: echo "name=merge/${{ github.ref_name }}-into-${{ steps.upstream-branch.outputs.ref }}" >> $GITHUB_OUTPUT
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
@@ -75,8 +79,8 @@ jobs:
 
       - name: Create merge branch
         run: |
-          git checkout -B merge/${{ github.ref_name }}
-          git push --set-upstream origin merge/${{ github.ref_name }}
+          git checkout -B ${{ steps.merge-branch.outputs.name }}
+          git push --set-upstream origin ${{ steps.merge-branch.outputs.name }}
 
       - name: Find assignee GitHub login
         id: assignee
@@ -91,7 +95,7 @@ jobs:
         run: >
           echo "pr-url=$(gh pr list
           --base ${{ steps.upstream-branch.outputs.ref }}
-          --head merge/${{ github.ref_name }}
+          --head ${{ steps.merge-branch.outputs.name }}
           --json url
           --jq '[.[]|.url][0]')" >> "$GITHUB_OUTPUT"
 
@@ -104,7 +108,7 @@ jobs:
         run: >
           pr_url=$(gh pr create
           --base ${{ steps.upstream-branch.outputs.ref }}
-          --head merge/${{ github.ref_name }}
+          --head ${{ steps.merge-branch.outputs.name }}
           --assignee ${{ (steps.assignee.outputs.login != 'github-actions[bot]' && steps.assignee.outputs.login) || (github.actor != 'github-actions[bot]' && github.actor || 'bonita-ci')}}
           --title "[merge] ${{ github.ref_name}} into ${{ steps.upstream-branch.outputs.ref }}"
           --body "Merge Pull request opened automatically. Use `Merge Pull Request` action (DO NOT SQUASH). DO NOT commit conflict resolution update to the base branch (default option in Github UI).")
