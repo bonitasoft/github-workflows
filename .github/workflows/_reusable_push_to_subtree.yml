@@ -36,7 +36,6 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
-          persist-credentials: false
 
       - name: Install splitsh-lite
         run: |
