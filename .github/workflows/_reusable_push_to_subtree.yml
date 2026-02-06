@@ -36,14 +36,38 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
-          persist-credentials: false
 
-      - name: Split community subtree
-        uses: claudiodekker/splitsh-action@v1.0.0
+      - name: Install splitsh-lite
+        run: |
+          curl -L https://github.com/splitsh/lite/releases/download/v2.0.0/lite_linux_amd64.tar.gz | tar -xz
+          sudo mv splitsh-lite /usr/local/bin/
+
+      # Inspired by https://github.com/claudiodekker/splitsh-action
+      # Replaced with native implementation for actions/checkout@v6 compatibility
+      - name: Split and push to subtree
         env:
           GITHUB_TOKEN: ${{ secrets.BONITA_CI_PAT }}
-        with:
-          prefix: ${{ inputs.prefix }}
-          remote: ${{ inputs.remote }}
-          reference: ${{ inputs.ref_name }}
-          as_tag: ${{ startsWith(inputs.ref, 'refs/tags/') }}
+        run: |
+          set -ex
+
+          prefix="${{ inputs.prefix }}"
+          remote="${{ inputs.remote }}"
+          reference="${{ inputs.ref_name }}"
+          as_tag="${{ startsWith(inputs.ref, 'refs/tags/') }}"
+
+          # Convert remote URL to use HTTPS with token authentication
+          remote_https=$(echo "$remote" | sed 's|^git@github.com:|https://github.com/|' | sed "s|^https://github.com/|https://${GITHUB_TOKEN}@github.com/|")
+
+          # Clear any existing HTTP headers (ignore if not set - checkout v6 compatibility)
+          git config --local --unset-all http.https://github.com/.extraheader || true
+
+          # Split the repository
+          git remote add splitsh_target_remote "$remote_https"
+          SHA1=$(splitsh-lite --prefix="$prefix")
+
+          # Push the split repository to the remote
+          if [ "$as_tag" = "true" ]; then
+            git push splitsh_target_remote "$SHA1:refs/tags/$reference" -f --verbose
+          else
+            git push splitsh_target_remote "$SHA1:refs/heads/$reference" -f --verbose
+          fi
