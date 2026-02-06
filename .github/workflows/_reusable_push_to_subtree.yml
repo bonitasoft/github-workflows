@@ -36,6 +36,8 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
+          # Required: checkout v6 sets up credentials that override token-embedded URLs
+          persist-credentials: false
 
       - name: Install splitsh-lite
         run: |
