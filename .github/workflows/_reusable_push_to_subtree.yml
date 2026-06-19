@@ -32,7 +32,7 @@ jobs:
   push-to-subtree:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
@@ -45,7 +45,7 @@ jobs:
           sudo mv splitsh-lite /usr/local/bin/
 
       # Inspired by https://github.com/claudiodekker/splitsh-action
-      # Replaced with native implementation for actions/checkout@v6 compatibility
+      # Replaced with native implementation for actions/checkout@v7 compatibility
       - name: Split and push to subtree
         env:
           GITHUB_TOKEN: ${{ secrets.BONITA_CI_PAT }}
