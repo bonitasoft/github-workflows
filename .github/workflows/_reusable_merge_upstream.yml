@@ -23,22 +23,29 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
+  determine-upstream-branch:
+    runs-on: ubuntu-24.04
+    outputs:
+      ref: ${{ steps.upstream-branch.outputs.ref }}
+    steps:
+      - name: Determine upstream branch
+        id: upstream-branch
+        run: echo "ref=${{ fromJson(vars.SUPPORTED_BRANCHES).upstream-branch[github.ref_name] }}" >> $GITHUB_OUTPUT
+
   merge-in-upstream-branch:
     runs-on: ubuntu-24.04
+    needs: determine-upstream-branch
+    if: ${{ needs.determine-upstream-branch.outputs.ref != '' }}
     steps:
       - name: Setup git
         uses: bonitasoft/git-setup-action@v1
         with:
           keeper-secret-config: ${{ secrets.KSM_CONFIG }}
 
-      - name: Determine upstream branch
-        id: upstream-branch
-        run: echo "ref=${{ fromJson(vars.SUPPORTED_BRANCHES).upstream-branch[github.ref_name] }}" >> $GITHUB_OUTPUT
-
       - name: Checkout upstream branch
         uses: actions/checkout@v7
         with:
-          ref: ${{ steps.upstream-branch.outputs.ref }}
+          ref: ${{ needs.determine-upstream-branch.outputs.ref }}
           fetch-depth: 0
           token: ${{ secrets.BONITA_CI_PAT }}
 
@@ -48,7 +55,7 @@ jobs:
 
       - name: Merge upstream branch
         run: |
-          git merge origin/${{ github.ref_name }} ${{ inputs.ignore-conflicts && '-X ours' || ''}}  -m "chore(merge): ${{ github.ref_name }} into ${{ steps.upstream-branch.outputs.ref }}"
+          git merge origin/${{ github.ref_name }} ${{ inputs.ignore-conflicts && '-X ours' || ''}}  -m "chore(merge): ${{ github.ref_name }} into ${{ needs.determine-upstream-branch.outputs.ref }}"
           git push
 
   create-merge-pr-in-conflict:
@@ -63,13 +70,9 @@ jobs:
       repository-projects: read
       statuses: read
     steps:
-      - name: Determine upstream branch
-        id: upstream-branch
-        run: echo "ref=${{ fromJson(vars.SUPPORTED_BRANCHES).upstream-branch[github.ref_name] }}" >> $GITHUB_OUTPUT
-
       - name: Define merge branch
         id: merge-branch
-        run: echo "name=merge/${{ github.ref_name }}-into-${{ steps.upstream-branch.outputs.ref }}" >> $GITHUB_OUTPUT
+        run: echo "name=merge/${{ github.ref_name }}-into-${{ needs.determine-upstream-branch.outputs.ref }}" >> $GITHUB_OUTPUT
 
       - name: Checkout
         uses: actions/checkout@v7
@@ -94,7 +97,7 @@ jobs:
         name: Check opened Pull Request
         run: >
           echo "pr-url=$(gh pr list
-          --base ${{ steps.upstream-branch.outputs.ref }}
+          --base ${{ needs.determine-upstream-branch.outputs.ref }}
           --head ${{ steps.merge-branch.outputs.name }}
           --json url
           --jq '[.[]|.url][0]')" >> "$GITHUB_OUTPUT"
@@ -107,10 +110,10 @@ jobs:
           GH_TOKEN: ${{ secrets.BONITA_CI_PAT }}
         run: >
           pr_url=$(gh pr create
-          --base ${{ steps.upstream-branch.outputs.ref }}
+          --base ${{ needs.determine-upstream-branch.outputs.ref }}
           --head ${{ steps.merge-branch.outputs.name }}
           --assignee ${{ (steps.assignee.outputs.login != 'github-actions[bot]' && steps.assignee.outputs.login) || (github.actor != 'github-actions[bot]' && github.actor || 'bonita-ci')}}
-          --title "[merge] ${{ github.ref_name}} into ${{ steps.upstream-branch.outputs.ref }}"
+          --title "[merge] ${{ github.ref_name}} into ${{ needs.determine-upstream-branch.outputs.ref }}"
           --body "Merge Pull request opened automatically. Use `Merge Pull Request` action (DO NOT SQUASH). DO NOT commit conflict resolution update to the base branch (default option in Github UI).")
           && echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
 
@@ -121,7 +124,7 @@ jobs:
           keeper-secret-config: ${{ secrets.KSM_CONFIG }}
           channel-id: ${{ inputs.slack-channel-id }}
           message: |
-            :fire: Failed to create the merge conflict Pull Request on `${{ github.repository }}` from `${{ github.ref_name }}` to `${{ steps.upstream-branch.outputs.ref }}`
+            :fire: Failed to create the merge conflict Pull Request on `${{ github.repository }}` from `${{ github.ref_name }}` to `${{ needs.determine-upstream-branch.outputs.ref }}`
 
             - Add a :fire_extinguisher: if you take the action to resolve the problem
             - Add a :sweat_drops: when it's done
