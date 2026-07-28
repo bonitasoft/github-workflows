@@ -59,7 +59,9 @@ jobs:
           git push
 
   create-merge-pr-in-conflict:
-    needs: merge-in-upstream-branch
+    needs:
+      - determine-upstream-branch
+      - merge-in-upstream-branch
     if: failure()
     runs-on: ubuntu-24.04
     permissions:
