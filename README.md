@@ -1,5 +1,5 @@
 # Github workflows
-Home of the shared reusable workflows used in Bonitasoft organization.
+Home of the shared reusable workflows used in the Ofelia organization.
 
 ## Reusable workflows
 
@@ -9,5 +9,5 @@ Home of the shared reusable workflows used in Bonitasoft organization.
 ## Disclaimer
 
 The reusable workflows and actions defined in this repository is not aimed at general use. 
-Bonitasoft does not undertake to support those workflows outside of their internal usage in the company.
+Ofelia does not undertake to support those workflows outside of their internal usage in the company.
 This repository is still public and under GPLv2 license.
